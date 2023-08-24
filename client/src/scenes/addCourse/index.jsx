@@ -14,6 +14,8 @@ export default function MultilineTextFields() {
     const [instructorData, setInstructorData] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedInstructor, setSelectedInstructor] = useState(null);
+    const [courseData, setCourseData] = useState(["Live", "Mini", "Normal"]);
+    const [selectedCourseType, setSelectedCourseType] = useState(null);
     const [imageURL, setImageURL] = useState(null);
     const [title, setTitle] = useState(null);
     const [description, setDescription] = useState(null);
@@ -48,7 +50,8 @@ export default function MultilineTextFields() {
             courseDescription: description,
             category: selectedCategory,
             instructor: selectedInstructor,
-            courseImage: imageURL
+            courseImage: imageURL,
+            Course_type: selectedCourseType
         }).then((response) => {
             alert("Course added successfully");
             console.log(response.data)
@@ -100,6 +103,22 @@ export default function MultilineTextFields() {
                     >
                         {instructorData?.map((instructor) => (
                             <MenuItem value={instructor._id}>{instructor.first_name + " " + instructor.last_name}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </div>
+            <div>
+            <FormControl sx={{ m: 1, minWidth: 220 }}>
+                    <InputLabel id="demo-simple-select-helper-label">Select Type</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-helper-label"
+                        id="demo-simple-select-helper"
+                        value={selectedCourseType}
+                        label="Select an Instructor"
+                        onChange={(e) => setSelectedCourseType(e.target.value) && console.log(e.target.value)}
+                    >
+                        {courseData?.map((type) => (
+                            <MenuItem value={type}>{type}</MenuItem>
                         ))}
                     </Select>
                 </FormControl>

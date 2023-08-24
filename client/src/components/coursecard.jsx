@@ -16,6 +16,8 @@ export default function CourseCard(props) {
             course_id
         };
         let url = "/coursedetails";
+        if(props.mini)
+        url = "/minilecdetails";
         let uri = axios.getUri({ url, params });
         navigate(uri);
     };

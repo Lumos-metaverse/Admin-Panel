@@ -9,6 +9,8 @@ import './index.css'
 
 export default function Coursepage() {
     const [courseData, setCourseData] = useState([]);
+    const [miniData, setMiniData] = useState([]);
+
     const fetchCourses = async () => {
         await axios({
             method: "get",
@@ -20,8 +22,21 @@ export default function Coursepage() {
         });
     };
 
+
+        const fetchMini = async () => {
+            await axios({
+                method: "get",
+                url: `${process.env.REACT_APP_API_URL}/client/minis`,
+            }).then((res) => {
+                console.log(res);
+                setMiniData(res.data);
+                console.log(courseData);
+            });
+        };
+
     useEffect(() => {
         fetchCourses();
+        fetchMini();
     }, []);
 
     return (
@@ -52,8 +67,32 @@ export default function Coursepage() {
                             title={course.courseName}
                             description={course.courseDescription}
                             image={(course.courseImage) ? course.courseImage : CoursePhoto}
-                            // link={course.link}
                             lectures={course.lectures}
+                        />
+                    );
+                }, [])}
+            </div>
+            <div className="flex flex-col items-center courseHead">
+                <h1 className="text-white font-BrinnanBold text-center text-5xl uppercase ">
+                Mini
+                </h1>
+                <p className="text-neutral-400 font-InterRegular text-center text-base pb-5 w-3/4 coursePara">
+                    The Lumos Education Platform offers newbie developers the opportunity
+                    to get acquainted with the fundamental concepts of the web3 ecosystem
+                    such as blockchain technology, cryptocurrencies, tokens, wallets, NFTs
+                    apart from broaching present and future applications.
+                </p>
+            </div>
+            <div className="grid md:grid-cols-3 md:p-5 card">
+                {miniData?.map((mini) => {
+                    return (
+                        <CourseCard
+                            id={mini._id}
+                            title={mini.courseName}
+                            description={mini.courseDescription}
+                            mini={true}
+                            image={(mini.courseImage) ? mini.courseImage : CoursePhoto}
+                            lectures={mini.lectures}
                         />
                     );
                 }, [])}

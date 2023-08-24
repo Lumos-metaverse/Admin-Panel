@@ -10,21 +10,24 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import Slide from "@mui/material/Slide";
 import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import axios from "axios";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import "./index.css";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function AlertLectureAdded({ alertLecAdded, handleClick }) {
+const label = { inputProps: { "aria-label": "Images ?" } };
+
+function AlertMiniAdded({ alertMiniAdded, handleClick }) {
   return (
     <div>
       <Dialog
-        open={alertLecAdded}
+        open={alertMiniAdded}
         TransitionComponent={Transition}
         keepMounted
         onClose={() => handleClick()}
@@ -43,7 +46,7 @@ function AlertLectureAdded({ alertLecAdded, handleClick }) {
   );
 }
 
-function AlertLectureUpdated({ alertLectureUpdated, handleClick }) {
+function AlertMiniUpdated({ alertLectureUpdated, handleClick }) {
   return (
     <div>
       <Dialog
@@ -66,11 +69,11 @@ function AlertLectureUpdated({ alertLectureUpdated, handleClick }) {
   );
 }
 
-function AlertLectureErr({ alertLecAddedErr, handleClick }) {
+function AlertMiniErr({ alertMiniAddedErr, handleClick }) {
   return (
     <div>
       <Dialog
-        open={alertLecAddedErr}
+        open={alertMiniAddedErr}
         TransitionComponent={Transition}
         keepMounted
         onClose={() => handleClick()}
@@ -78,7 +81,7 @@ function AlertLectureErr({ alertLecAddedErr, handleClick }) {
       >
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
-            Something went wrong, Please try again
+            Something went wrong, Please try again,
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -89,12 +92,59 @@ function AlertLectureErr({ alertLecAddedErr, handleClick }) {
   );
 }
 
-const Lectures = () => {
+function AlertMiniImageErr({ alertMiniImageErr, handleClick }) {
+  return (
+    <div>
+      <Dialog
+        open={alertMiniImageErr}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={() => handleClick()}
+        aria-describedby="alert-dialog-slide-description"
+      >
+        <DialogContent>
+          <DialogContentText id="alert-dialog-slide-description">
+            Max Word Length Exceeded should be 150
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleClick()}>Cool</Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+}
+
+function AlertMiniWordErr({ alertMiniWordErr, handleClick }) {
+  return (
+    <div>
+      <Dialog
+        open={alertMiniWordErr}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={() => handleClick()}
+        aria-describedby="alert-dialog-slide-description"
+      >
+        <DialogContent>
+          <DialogContentText id="alert-dialog-slide-description">
+            Max Word Length Exceeded should be 250
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleClick()}>Cool</Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+}
+
+const Mini = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState(null);
-  const [courseId, setCourseId] = useState(null);
+
   const [contentList, setContentList] = useState([
     { paragraphs: [""], subHeading: "", images: [] },
+
   ]);
   const editorRef = useRef(null);
   let [searchParams, setSearchParams] = useSearchParams();
@@ -103,9 +153,12 @@ const Lectures = () => {
   console.log("CorId=" + CorId);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [courses, setCourses] = useState([]);
-  const [alertLecAdded, setAlertLecAdded] = useState();
-  const [alertLecAddedErr, setAlertLecAddedErr] = useState();
-  const [alertLecUpdated, setAlertLecUpdated] = useState();
+  const [Checked, setChecked] = useState(false);
+  const [alertMiniAdded, setAlertMiniAdded] = useState();
+  const [alertMiniAddedErr, setAlertMiniAddedErr] = useState();
+  const [alertMiniImageErr, setAlertMiniImageErr] = useState();
+  const [alertMiniWordErr, setAlertMiniWordErr] = useState();
+  const [alertMiniUpdated, setAlertMiniUpdated] = useState();
 
   const fetchLecture = async () => {
     await axios
@@ -127,7 +180,22 @@ const Lectures = () => {
     if (LecId) fetchLecture();
   }, [LecId]);
 
-  const updateLecture = () => {
+  const imgTag = new RegExp(
+    '(<img)[^/>]*(/>|>)'
+  )
+
+  useEffect(() => {
+    if (contentList) {
+      contentList.forEach((item) => {
+        item.paragraphs.forEach((item) => {
+          const arr = item.split(" ");
+          arr.map((item)=>{if(imgTag.test(item)){setChecked(true)}})
+        });
+      });
+    }
+  }, [contentList]);
+
+  const updateLectureApi = () => {
     axios
       .patch(`${process.env.REACT_APP_API_URL}/client/lecture/update`, {
         title: title,
@@ -135,36 +203,74 @@ const Lectures = () => {
         lectureId: LecId,
       })
       .then(function (response) {
-        setAlertLecAdded(true);
+        setAlertMiniAdded(true);
       })
       .catch(function (error) {
-        setAlertLecAddedErr(true);
+        setAlertMiniAddedErr(true);
       });
+  }
+
+  const updateLecture = () => {
+    let len = 0;
+    {
+      contentList &&
+        contentList.map((item) => {
+          item.paragraphs.map((item) => {
+            len += item.split(" ").length;
+          });
+          len += item.subHeading.split(" ").length;
+        });
+    }
+    if (Checked) {
+      { len <= 150 ? updateLectureApi() : setAlertMiniImageErr(true) }
+    }
+    else {
+      { len <= 250 ? updateLectureApi() : setAlertMiniWordErr(true) }
+    }
   };
 
+  const addNewLecApi = () => {
+    axios
+      .post(`${process.env.REACT_APP_API_URL}/client/lecture/add`, {
+        no: 1,
+        title: title,
+        content: contentList,
+        courseId: selectedCourse,
+      })
+      .then(function (response) {
+        setAlertMiniAdded(true);
+      })
+      .catch(function (error) {
+        setAlertMiniAddedErr(true);
+      });
+  }
+
   const addNewLec = () => {
-    if (selectedCourse) {
-      axios
-        .post(`${process.env.REACT_APP_API_URL}/client/lecture/add`, {
-          no: 1,
-          title: title,
-          content: contentList,
-          courseId: selectedCourse,
-        })
-        .then(function (response) {
-          setAlertLecAdded(true);
-        })
-        .catch(function (error) {
-          setAlertLecAddedErr(true);
+    let len = 0;
+    {
+      contentList &&
+        contentList.map((item) => {
+          item.paragraphs.map((item) => {
+            len += item.split(" ").length;
+          });
+          len += item.subHeading.split(" ").length;
         });
+    }
+    if (selectedCourse) {
+      if (Checked) {
+        { len <= 150 ? addNewLecApi() : setAlertMiniImageErr(true) }
+      }
+      else {
+        { len <= 250 ? addNewLecApi() : setAlertMiniWordErr(true) }
+      }
     } else {
-      setAlertLecAddedErr(true);
+      setAlertMiniAddedErr(true);
     }
   };
 
   const fetchCourses = async () => {
     await axios
-      .get(`${process.env.REACT_APP_API_URL}/client/courses`)
+      .get(`${process.env.REACT_APP_API_URL}/client/minis`)
       .then((response) => {
         setCourses(response.data);
         console.log(response.data);
@@ -178,9 +284,7 @@ const Lectures = () => {
     fetchCourses();
   }, []);
 
-  useEffect(() => {
-    console.log(contentList);
-  }, [contentList]);
+
 
   const handleParagraphAdd = (index) => {
     contentList[index].paragraphs.push("");
@@ -202,41 +306,45 @@ const Lectures = () => {
     setContentList([...contentList]);
   };
   const handleLecAddedClick = () => {
-    setAlertLecAdded(false);
+    setAlertMiniAdded(false);
     const params = {
       course_id: selectedCourse,
     };
-    let url = "/coursedetails";
+    let url = "/minilecdetails";
     let uri = axios.getUri({ url, params });
     navigate(uri);
   };
 
-  const handleLecAddedErrClick = () => {
-    setAlertLecAddedErr(false);
-  };
-
   const handleLecUpdated = () => {
-    setAlertLecUpdated(false);
+    setAlertMiniUpdated(false);
     const params = {
       course_id: selectedCourse,
     };
-    let url = "/coursedetails";
+    let url = "/minilecdetails";
     let uri = axios.getUri({ url, params });
     navigate(uri);
   };
 
   return (
     <div>
-      <AlertLectureAdded
-        alertLecAdded={alertLecAdded}
+      <AlertMiniAdded
+        alertMiniAdded={alertMiniAdded}
         handleClick={handleLecAddedClick}
       />
-      <AlertLectureErr
-        alertLecAddedErr={alertLecAddedErr}
-        handleClick={handleLecAddedErrClick}
+      <AlertMiniErr
+        alertMiniAddedErr={alertMiniAddedErr}
+        handleClick={() => setAlertMiniAddedErr(false)}
       />
-      <AlertLectureUpdated
-        alertLecUpdated={alertLecUpdated}
+      <AlertMiniWordErr
+        alertMiniWordErr={alertMiniWordErr}
+        handleClick={() => setAlertMiniWordErr(false)}
+      />
+      <AlertMiniImageErr
+        alertMiniImageErr={alertMiniImageErr}
+        handleClick={() => setAlertMiniImageErr(false)}
+      />
+      <AlertMiniUpdated
+        alertUpdated={alertMiniUpdated}
         handleClick={handleLecUpdated}
       />
       <div style={{ margin: "2rem" }}>
@@ -252,7 +360,7 @@ const Lectures = () => {
               shrink={selectedCourse ? true : false}
               id="demo-simple-select-helper-label"
             >
-              Select course
+              Select Mini
             </InputLabel>
             <Select
               labelId="demo-simple-select-helper-label"
@@ -269,6 +377,16 @@ const Lectures = () => {
           </FormControl>
         </div>
         <h2>Content</h2>
+        <FormControlLabel
+          value="end"
+          control={<Checkbox />}
+          checked={Checked}
+          label="Image"
+          labelPlacement="end"
+          onChange={() => {
+            setChecked(!Checked);
+          }}
+        />
         {contentList.map((item, indexSubH) => (
           <div style={{ marginBottom: "2rem" }}>
             <div>
@@ -317,11 +435,11 @@ const Lectures = () => {
           </div>
         ))}
         <Button variant="contained" onClick={LecId ? updateLecture : addNewLec}>
-          {LecId ? "Update Lecture" : "Add Lecture"}
+          {LecId ? "Update Mini" : "Add Mini"}
         </Button>
       </div>
     </div>
   );
 };
 
-export default Lectures;
+export default Mini;
