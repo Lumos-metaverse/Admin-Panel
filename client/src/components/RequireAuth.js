@@ -1,5 +1,4 @@
 import { useLocation, Navigate, Outlet } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
 import { Cookies } from "react-cookie";
 
 const RequireAuth = () => {
